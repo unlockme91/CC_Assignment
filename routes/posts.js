@@ -37,17 +37,60 @@ router.get('/', verifyToken, async(req,res) =>{
 
     try{
         const postData = await Post.find()
-        res.send(postData)
+        if(!postByTopic){
+            res.send('[]')
+        }
+        else{
+            res.send(postByTopic)
+        }
     }catch(err){
         res.status(400).send({message:err})
     }
 })
 
-router.get('/:topic', verifyToken, async(req,res) =>{
+router.get('/topic/:topicId', verifyToken, async(req,res) =>{
 
     try{
-        const postByTopic = await Post.findOne({topic:req.params.topic})
-        res.send(postByTopic)
+        const postByTopic = await Post.findOne({topic:req.params.topicId})
+        if(!postByTopic){
+        res.send('[]')
+        }
+        else{
+        res.send(postByTopic)}
+    }catch(err){
+        res.status(400).send(err)
+    }
+    
+})
+
+router.post('/interact/:postId', verifyToken, async(req,res) =>{
+
+    try{
+        let commentObj = {"comment":req.body.comment,"name":req.body.name}
+        console.log(commentObj)
+        let postData = await Post.findById(req.params.postId)
+        postData.likes = req.body.like ? postData.likes + 1:postData.likes
+        postData.dislikes = req.body.dislike ? postData.dislikes + 1:postData.dislikes
+        if(req.body.comment){
+             postData['comments'].push(commentObj)
+        }
+        const updatedPost = await Post.updateOne(
+            {_id:req.params.postId},
+            {$set:{
+                title:postData.title,
+                topic:postData.topic,
+                message:postData.message,
+                expiryTime:postData.expiryTime,
+                status:postData.status,
+                author:postData.author,
+                likes:postData.likes,
+                dislikes:postData.dislikes,
+                comments:postData.comments,
+                date:postData.date
+
+            }
+            })
+        res.send(updatedPost)
     }catch(err){
         res.status(400).send({message:err})
     }
