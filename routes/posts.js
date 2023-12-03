@@ -5,10 +5,20 @@ const Post = require('../models/Post')
 const verifyToken = require('../verifyToken')
 
 router.post('/', verifyToken, async(req,res) =>{
-    const postData = new this.post()
+
+    
+    const postReqData = new Post({
+        title:req.body.title,
+        topic:req.body.topic,
+        message:req.body.message,
+        expiryTime:req.body.expiryTime,
+        status:req.body.title,
+        author:req.body.author
+
+    })
     try{
-        const films = await Film.find()
-        res.send(films)
+        const postData = await postReqData.save()
+        res.send(postData)
     }catch(err){
         res.status(400).send({message:err})
     }

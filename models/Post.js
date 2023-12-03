@@ -19,13 +19,14 @@ const postSchema = mongoose.Schema({
     },
     expiryTime:{
         type:Date,
-        require:true
+        required:true
     },
     status:{
         type:String
     },
     author:{
-        type:String
+        type:String,
+        required:true
     },
     likes:{
         type:Number,

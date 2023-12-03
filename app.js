@@ -7,7 +7,7 @@ require('dotenv/config')
 
 app.use(bodyParser.json())
 
-const filmsRoute = require('./routes/films')
+const postRoute = require('./routes/posts')
 const authRoute = require('./routes/auth')
 
 app.use('/api/post',postRoute)
