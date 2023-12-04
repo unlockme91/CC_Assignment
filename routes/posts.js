@@ -8,8 +8,6 @@ const verifyToken = require('../verifyToken')
 router.post('/', verifyToken, async(req,res) =>{
     let Status
     let dt = new Date(req.body.expiryTime)
-
-    console.log(dt.getTime())
     if (dt.getTime() > Date.now()){
        Status = 'Live'
     }
@@ -37,6 +35,21 @@ router.get('/', verifyToken, async(req,res) =>{
 
     try{
         const postData = await Post.find()
+        if(!postData){
+            res.send('[]')
+        }
+        else{
+            res.send(postData)
+        }
+    }catch(err){
+        res.status(400).send({message:err})
+    }
+})
+
+router.get('/expired/:topicId', verifyToken, async(req,res) =>{
+
+    try{
+        const postData = await Post.find({status:'Expired', topic:req.params.topicId})
         if(!postData){
             res.send('[]')
         }
@@ -92,7 +105,7 @@ router.post('/interact/:postId', verifyToken, async(req,res) =>{
 router.get('/active/:topicId', verifyToken, async(req,res) =>{
 
     try{
-        const postByTopic = await Post.find({topic:req.params.topicId})
+        const postByTopic = await Post.find({topic:req.params.topicId, status:'Live'})
         if(!postByTopic){
         res.send('[]')
         }
@@ -100,7 +113,7 @@ router.get('/active/:topicId', verifyToken, async(req,res) =>{
         let sum = 0
         let activePost = []
         for(let i in postByTopic){
-            if(postByTopic[i].status == 'Live'){
+
                 let postById = await Post.findById(postByTopic[i]._id)
                 let sumLikesDislikes = postById.likes + postById.dislikes
                 if(sumLikesDislikes==sum){
@@ -111,7 +124,7 @@ router.get('/active/:topicId', verifyToken, async(req,res) =>{
                     sum = sumLikesDislikes
                     activePost.push(postByTopic[i])
 
-                }
+
             }
         }
         res.send(activePost)}

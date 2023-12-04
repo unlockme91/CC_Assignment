@@ -6,7 +6,7 @@ const postSchema = mongoose.Schema({
         require:true
     },
     topic:{
-        type:String,
+        type:[String],
         require:true,
         enum:['Politics', 'Sport', 'Health', 'Tech']
     },
