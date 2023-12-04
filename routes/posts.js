@@ -37,11 +37,11 @@ router.get('/', verifyToken, async(req,res) =>{
 
     try{
         const postData = await Post.find()
-        if(!postByTopic){
+        if(!postData){
             res.send('[]')
         }
         else{
-            res.send(postByTopic)
+            res.send(postData)
         }
     }catch(err){
         res.status(400).send({message:err})
@@ -51,7 +51,7 @@ router.get('/', verifyToken, async(req,res) =>{
 router.get('/topic/:topicId', verifyToken, async(req,res) =>{
 
     try{
-        const postByTopic = await Post.findOne({topic:req.params.topicId})
+        const postByTopic = await Post.find({topic:req.params.topicId})
         if(!postByTopic){
         res.send('[]')
         }
@@ -66,9 +66,11 @@ router.get('/topic/:topicId', verifyToken, async(req,res) =>{
 router.post('/interact/:postId', verifyToken, async(req,res) =>{
 
     try{
-        let commentObj = {"comment":req.body.comment,"name":req.body.name}
-        console.log(commentObj)
+           
         let postData = await Post.findById(req.params.postId)
+        let timeLeftMs = (new Date(postData.expiryTime)).getTime()  - Date.now()
+        if(timeLeftMs > 0){
+        let commentObj = {"comment":req.body.comment,"name":req.body.name} 
         postData.likes = req.body.like ? postData.likes + 1:postData.likes
         postData.dislikes = req.body.dislike ? postData.dislikes + 1:postData.dislikes
         if(req.body.comment){
@@ -76,24 +78,47 @@ router.post('/interact/:postId', verifyToken, async(req,res) =>{
         }
         const updatedPost = await Post.updateOne(
             {_id:req.params.postId},
-            {$set:{
-                title:postData.title,
-                topic:postData.topic,
-                message:postData.message,
-                expiryTime:postData.expiryTime,
-                status:postData.status,
-                author:postData.author,
-                likes:postData.likes,
-                dislikes:postData.dislikes,
-                comments:postData.comments,
-                date:postData.date
-
-            }
+            {$set:postData
             })
-        res.send(updatedPost)
+        res.send(updatedPost)}
+        else{
+            res.send({message:'No action can be performed on expired post'})
+        }
     }catch(err){
         res.status(400).send({message:err})
     }
+})
+
+router.get('/active/:topicId', verifyToken, async(req,res) =>{
+
+    try{
+        const postByTopic = await Post.find({topic:req.params.topicId})
+        if(!postByTopic){
+        res.send('[]')
+        }
+        else{
+        let sum = 0
+        let activePost = []
+        for(let i in postByTopic){
+            if(postByTopic[i].status == 'Live'){
+                let postById = await Post.findById(postByTopic[i]._id)
+                let sumLikesDislikes = postById.likes + postById.dislikes
+                if(sumLikesDislikes==sum){
+                    activePost.push(postByTopic[i])
+                }
+                else if(sumLikesDislikes>sum){ 
+                    activePost = []
+                    sum = sumLikesDislikes
+                    activePost.push(postByTopic[i])
+
+                }
+            }
+        }
+        res.send(activePost)}
+    }catch(err){
+        res.status(400).send(err)
+    }
+    
 })
 
 module.exports = router
