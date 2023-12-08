@@ -8,7 +8,7 @@ const postSchema = mongoose.Schema({
     topic:{
         type:[String],
         require:true,
-        enum:['Politics', 'Sport', 'Health', 'Tech']
+        enum:['Politics', 'Sport', 'Health', 'Tech'] //restricting the vakues of the attributes
     },
     date:{
         type:Date,
@@ -41,7 +41,7 @@ const postSchema = mongoose.Schema({
         type:Array,
         default:[],
         comment:{
-            type:String
+            type:String       //comments attribute  will be array of JSon object with comment and name attributes
         },
         name:{
             type:String
