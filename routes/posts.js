@@ -57,7 +57,7 @@ router.post('/interact/:postId', verifyToken,monitorPostStatus, async(req,res) =
            
         let postData = await Post.findById(req.params.postId)
         if(postData.author != req.body.name) {                  //Author of the post will not be allowed to interact.
-        if(postData.status = 'Live'){                      //Interaction is only allowed with Live Post                                   
+        if(postData.status == 'Live'){                      //Interaction is only allowed with Live Post                                   
         let commentObj = {"comment":req.body.comment,"name":req.body.name}  
         postData.likes = req.body.like ? postData.likes + 1:postData.likes
         postData.dislikes = req.body.dislike ? postData.dislikes + 1:postData.dislikes //likes or dislikes attribute in post is
@@ -66,7 +66,10 @@ router.post('/interact/:postId', verifyToken,monitorPostStatus, async(req,res) =
         }
         const updatedPost = await Post.updateOne(    //update the above chnages in the post data in collection.
             {_id:req.params.postId},
-            {$set:postData
+            {$set:{likes:postData.likes,
+                dislikes:postData.dislikes,
+                comments:postData.comments
+            }
             })
         res.send(updatedPost)}
         else{

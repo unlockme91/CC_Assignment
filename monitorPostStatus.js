@@ -9,8 +9,9 @@ const monitorPostStatus = async(req,res,next)=>{
             postData[post].status = 'Expired'
             await Post.updateOne(
             {_id:postData[post]._id},
-            {$set:postData[post]               //Updating the chnage in the posts collecton in MongoDB
-            })
+            {$set:{status:postData[post].status               //Updating the status chnage in the posts collecton in MongoDB
+        }
+        })
         }
     }
     next()
