@@ -2,16 +2,17 @@ const express = require('express')
 const router = express.Router()
 
 const User = require('../models/User')
-const {registerValidation,loginValidation} = require('../validations/validation') //imported functions to validate registration
-                                                                                 // and login functionality.
-const bcryptjs = require('bcryptjs')   //this library encrypts/decrypts the password
+const {registerValidation,loginValidation} = require('../validations/validation') 
+const bcryptjs = require('bcryptjs')   //this library encrypts/decrypts the password using salt and hashing algorithm.
+
 const jsonwebtoken = require('jsonwebtoken')  //importing this library for generating token and its related validations.
 
 router.post('/register', async(req,res)=>{ //user request to register will be received by this code block
 
     // Validation 1 to check error in attributes of the request body 
+
     const {error} = registerValidation(req.body) //Will only extract error attribute if come across any error
-    if(error){
+    if(error)
         return res.status(400).send({message:error['details'][0]['message']})  //Returning only the message attribute of error
     }
 
@@ -25,7 +26,7 @@ router.post('/register', async(req,res)=>{ //user request to register will be re
     // Generated a hashed password with the combination of salt
 
     const salt = await bcryptjs.genSalt(5)   //generates a random salt string. Here 5 indicates complexity
-                                        //i.e time taken by hash algorithm. Higher the value better the security
+                                             //i.e time taken by hash algorithm. Higher the value better the security
 
     const hashedPassword = await bcryptjs.hash(req.body.password,salt) //hashed password generation with the combination of salt.
                                                                       //Here same password will also yield different hash representation.
@@ -67,6 +68,7 @@ router.post('/login', async(req,res)=>{
     
     // Generate an auth-token
     const token = jsonwebtoken.sign({_id:user._id}, process.env.TOKEN_SECRET) //Generates a token based on user id and user secret key.
+    
     res.header('auth-token',token).send({'auth-token':token})    //Send the token in response header as well as body.
 
 })
