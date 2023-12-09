@@ -12,7 +12,7 @@ router.post('/register', async(req,res)=>{ //user request to register will be re
     // Validation 1 to check error in attributes of the request body 
 
     const {error} = registerValidation(req.body) //Will only extract error attribute if come across any error
-    if(error)
+    if(error){
         return res.status(400).send({message:error['details'][0]['message']})  //Returning only the message attribute of error
     }
 
@@ -68,7 +68,7 @@ router.post('/login', async(req,res)=>{
     
     // Generate an auth-token
     const token = jsonwebtoken.sign({_id:user._id}, process.env.TOKEN_SECRET) //Generates a token based on user id and user secret key.
-    
+
     res.header('auth-token',token).send({'auth-token':token})    //Send the token in response header as well as body.
 
 })

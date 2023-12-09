@@ -4,6 +4,7 @@ const router = express.Router()
 
 const Post = require('../models/Post')
 const verifyToken = require('../verifyToken')
+const monitorPostStatus = require('../monitorPostStatus')
 
 router.post('/', verifyToken, async(req,res) =>{ //If the user sends the request on POST: /api/post to post a comment 
     let Status                                   //This will be send to this code block
@@ -31,37 +32,58 @@ router.post('/', verifyToken, async(req,res) =>{ //If the user sends the request
     }
 })
 
-router.get('/', verifyToken, async(req,res) =>{  //Request to get all the posts will be forwarded to this get code block and
+// router.get('/', verifyToken,monitorPostStatus, async(req,res) =>{  //Request to get all the posts will be forwarded to this get code block and
+//     try{
+//         const postData = await Post.find()       // verifyToken will be called in between to check the validity of the token
+//         if(!postData){                           // This will find all the collections matching with 'post' schema mappings
+//             res.send('[]')
+//         }
+//         else{
+//             res.send(postData)
+//         }
+//     }catch(err){
+//         res.status(400).send({message:err})
+//     }
+// })
+
+
+//Request to interact with post - likes/dislikes and comments will be received by this post code block.
+//Also two middleware functions verifyToken and monitorPostStatus will be called before any operation in all endpoints
+//verifyToken will be called to check the validity of the token
+//and monitorPostStatus will be called to keep the status of message up to date('Expired' if beyong expiry time)
+
+router.post('/interact/:postId', verifyToken,monitorPostStatus, async(req,res) =>{
     try{
-        const postData = await Post.find()       // verifyToken will be called in between to check the validity of the token
-        if(!postData){                           // This will find all the collections matching with 'post' schema mappings
-            res.send('[]')
+           
+        let postData = await Post.findById(req.params.postId)
+        if(postData.author != req.body.name) {                  //Author of the post will not be allowed to interact.
+        if(postData.status = 'Live'){                      //Interaction is only allowed with Live Post                                   
+        let commentObj = {"comment":req.body.comment,"name":req.body.name}  
+        postData.likes = req.body.like ? postData.likes + 1:postData.likes
+        postData.dislikes = req.body.dislike ? postData.dislikes + 1:postData.dislikes //likes or dislikes attribute in post is
+        if(req.body.comment){                                                        // incremented by one if passed true in request.
+             postData['comments'].push(commentObj)    // comment along with commentor name is added.                             
         }
+        const updatedPost = await Post.updateOne(    //update the above chnages in the post data in collection.
+            {_id:req.params.postId},
+            {$set:postData
+            })
+        res.send(updatedPost)}
         else{
-            res.send(postData)
+            res.status(400).send({message:'No action can be performed on expired post'})//Error message when interacted with expired post.
         }
+    }
+    else{
+        res.status(400).send({message:'Author cannot interact with his/her own post'})//Error message when interacted with own post
+    }
     }catch(err){
         res.status(400).send({message:err})
     }
 })
 
-router.get('/expired/:topicId', verifyToken, async(req,res) =>{ //Request to get all expired post per topic by making topicId 
-                                                                //as dynamic parameter
-    try{
-        const postData = await Post.find({status:'Expired', topic:req.params.topicId}) //multiper filtering paramters in JSONObject 
-        if(!postData){                                                                 //to fetch by name and status
-            res.send('[]')
-        }
-        else{
-            res.send(postData)
-        }
-    }catch(err){
-        res.status(400).send({message:err})
-    }
-})
-
-router.get('/topic/:topicId', verifyToken, async(req,res) =>{
-                                                                //Request to get all post per topic - topicId as parameter 
+//Request to get all post per topic - topicId as parameter 
+router.get('/topic/:topicId', verifyToken,monitorPostStatus, async(req,res) =>{
+                                                                
     try{
         const postByTopic = await Post.find({topic:req.params.topicId})
         if(!postByTopic){
@@ -75,38 +97,10 @@ router.get('/topic/:topicId', verifyToken, async(req,res) =>{
     
 })
 
-router.post('/interact/:postId', verifyToken, async(req,res) =>{//Request to interact with post - likes/dislikes and comments
-                                                                //will be received by this post code block.
-    try{
-           
-        let postData = await Post.findById(req.params.postId)
-        if(postData.author != req.body.name) {                  //Author of the post will not be allowed to interact.
-        let timeLeftMs = (new Date(postData.expiryTime)).getTime()  - Date.now() // Evaluating time left to expire(in milliseconds)
-        if(timeLeftMs > 0){                                                      // if expiry time is greater than current time
-        let commentObj = {"comment":req.body.comment,"name":req.body.name}       //then only interaction is allowed.
-        postData.likes = req.body.like ? postData.likes + 1:postData.likes
-        postData.dislikes = req.body.dislike ? postData.dislikes + 1:postData.dislikes //likes or dislikes attribute in post is
-        if(req.body.comment){                                                        // incremented by one if passed true in request.
-             postData['comments'].push(commentObj)    // comment along with commentor name is added.                             
-        }
-        const updatedPost = await Post.updateOne(    //update the above chnages in the post data in collection.
-            {_id:req.params.postId},
-            {$set:postData
-            })
-        res.send(updatedPost)}
-        else{
-            res.send({message:'No action can be performed on expired post'}) 
-        }
-    }
-    else{
-        res.send({message:'Author cannot interact with his/her own post'})
-    }
-    }catch(err){
-        res.status(400).send({message:err})
-    }
-})
 
-router.get('/active/:topicId', verifyToken, async(req,res) =>{ //Request to get active post per topic is forwarded here.
+
+//Request to get active post per topic is forwarded here.
+router.get('/active/:topicId', verifyToken, monitorPostStatus,async(req,res) =>{ 
 
     try{
         const postByTopic = await Post.find({topic:req.params.topicId, status:'Live'})//only Live topic can be active.
@@ -137,5 +131,24 @@ router.get('/active/:topicId', verifyToken, async(req,res) =>{ //Request to get 
     }
     
 })
+
+
+
+//Request to get all expired post per topic will be received by this code block
+router.get('/expired/:topicId', verifyToken,monitorPostStatus, async(req,res) =>{  
+                                                      
+    try{
+        const postData = await Post.find({status:'Expired', topic:req.params.topicId}) //multiper filtering paramters in JSONObject 
+        if(!postData){                                                                 //to fetch by name and status
+            res.send('[]')
+        }
+        else{
+            res.send(postData)
+        }
+    }catch(err){
+        res.status(400).send({message:err})
+    }
+})
+
 
 module.exports = router
