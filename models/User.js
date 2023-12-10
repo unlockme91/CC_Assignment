@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const userSchema = mongoose.Schema({ //mapping the schema of user deatils
+const userSchema = mongoose.Schema({ //defining the schema of user deatils
     username:{
         type:String,
         require:true,   //mandatory field
@@ -27,4 +27,4 @@ const userSchema = mongoose.Schema({ //mapping the schema of user deatils
         default:Date.now         // Send current timestamp by default
     }
 })
-module.exports=mongoose.model('users',userSchema)
+module.exports=mongoose.model('users',userSchema) //mapping the user schema with 'users' collection

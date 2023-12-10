@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const postSchema = mongoose.Schema({
+const postSchema = mongoose.Schema({ //defining the schema for message post
     title:{
         type:String,
         require:true
@@ -8,7 +8,7 @@ const postSchema = mongoose.Schema({
     topic:{
         type:[String],
         require:true,
-        enum:['Politics', 'Sport', 'Health', 'Tech'] //restricting the vakues of the attributes
+        enum:['Politics', 'Sport', 'Health', 'Tech'] //restricting the values of the attributes
     },
     date:{
         type:Date,
@@ -50,4 +50,4 @@ const postSchema = mongoose.Schema({
     }
 })
 
-module.exports = mongoose.model('posts',postSchema)
+module.exports = mongoose.model('posts',postSchema) //mapping the schema with 'posts' collection

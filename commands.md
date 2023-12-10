@@ -1,3 +1,5 @@
+//npm commands to install the packages
+
 npm install express nodemon mongoose dotenv body-parser
 
 * Install the joi package for validations

@@ -99,7 +99,9 @@ router.get('/topic/:topicId', verifyToken,monitorPostStatus, async(req,res) =>{
 router.get('/active/:topicId', verifyToken, monitorPostStatus,async(req,res) =>{ 
 
     try{
+        //Accessed: 8/12/2023 ,https://thecodebarbarian.com/how-find-works-in-mongoose.html for find() function
         const postByTopic = await Post.find({topic:req.params.topicId, status:'Live'})//only Live topic can be active.
+                                                        
         if(!postByTopic){
         res.send('[]')
         }
