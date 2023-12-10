@@ -68,7 +68,11 @@ router.post('/login', async(req,res)=>{
     
     // Generate an auth-token
     const token = jsonwebtoken.sign({_id:user._id}, process.env.TOKEN_SECRET) //Generates a token based on user id and user secret key.
-
+  
+    await User.updateOne({email:req.body.email},{$set:{   //saving the token in the corresponding user record
+        Token:token                                       //so that username can be fetched later by finding record through token. 
+    }
+} )
     res.header('auth-token',token).send({'auth-token':token})    //Send the token in response header as well as body.
 
 })

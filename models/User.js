@@ -19,6 +19,9 @@ const userSchema = mongoose.Schema({ //mapping the schema of user deatils
         min:6,
         max:1024
     },
+    Token:{
+        type:String
+    },
     date:{
         type:Date,
         default:Date.now         // Send current timestamp by default
